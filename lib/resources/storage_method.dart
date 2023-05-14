@@ -17,7 +17,7 @@ class StorageMethod {
 
     if (ispost) {
       String id = const Uuid().v1();
-      Reference ref = _storage.ref().child(id).child(_auth.currentUser!.uid);
+      ref = ref.child(id);
     }
 
     UploadTask uploadTask = ref.putData(file);

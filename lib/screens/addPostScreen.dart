@@ -18,17 +18,25 @@ class AddPostScreen extends StatefulWidget {
 class _AddPostScreenState extends State<AddPostScreen> {
   Uint8List? _file;
   final TextEditingController _descriptionController = TextEditingController();
+  bool _isloading = false;
 
   void PostImage(
     String uid,
     String username,
     String profImages,
   ) async {
+    setState(() {
+      _isloading = true;
+    });
     try {
       String res = await FirestoreMethods().uploadPost(
           _descriptionController.text, uid, username, _file!, profImages);
 
       if (res == "success") {
+        setState(() {
+          _isloading = false;
+        });
+        clearImage();
         showSnackBar("Posted", context);
       } else {
         showSnackBar(res, context);
@@ -83,6 +91,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
         });
   }
 
+  void clearImage() {
+    setState(() {
+      _file = null;
+    });
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -104,7 +118,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
               backgroundColor: mobileBackgroundColor,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () {},
+                onPressed: clearImage,
               ),
               title: const Text('Post to'),
               centerTitle: false,
@@ -112,17 +126,33 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 TextButton(
                   onPressed: () =>
                       PostImage(user.uid, user.username, user.photoUrl),
-                  child: const Text(
-                    "Post",
-                    style: TextStyle(
-                        color: Colors.purple,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16),
-                  ),
+                  child: _isloading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            backgroundColor: Colors.black,
+                          ),
+                        )
+                      : const Text(
+                          "Post",
+                          style: TextStyle(
+                              color: Colors.purple,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16),
+                        ),
                 )
               ],
             ),
             body: Column(children: [
+              _isloading
+                  ? const Center(
+                      child: LinearProgressIndicator(
+                        color: Colors.white,
+                        backgroundColor: Colors.black,
+                      ),
+                    )
+                  : const Padding(padding: EdgeInsets.only(top: 0)),
+              const Divider(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.start,
