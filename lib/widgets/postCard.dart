@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_flutter/models/user.dart';
 import 'package:instagram_flutter/provider/user_provider.dart';
 import 'package:instagram_flutter/resources/FirestoreMethod.dart';
 import 'package:instagram_flutter/screens/commentScreen.dart';
 import 'package:instagram_flutter/utlis/colors.dart';
+import 'package:instagram_flutter/utlis/utlis.dart';
 import 'package:instagram_flutter/widgets/likeAnimation.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +21,28 @@ class PostCard extends StatefulWidget {
 class _PostCardState extends State<PostCard> {
   bool isLikeAnimating = false;
   bool Liked = false;
+  int commentLen = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    getComments();
+  }
+
+  void getComments() async {
+    try {
+      QuerySnapshot snap = await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(widget.snap['postId'])
+          .collection('comments')
+          .get();
+
+      commentLen = snap.docs.length;
+    } catch (e) {
+      showSnackBar(e.toString(), context);
+    }
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +90,12 @@ class _PostCardState extends State<PostCard> {
                                               vertical: 12, horizontal: 16),
                                           child: Text(e),
                                         ),
-                                        onTap: () {},
+                                        onTap: () async {
+                                          FirestoreMethods().deletePost(
+                                              widget.snap['postId']);
+                                          Navigator.of(context).pop();
+                                          showSnackBar('Post Deleted', context);
+                                        },
                                       ),
                                     )
                                     .toList()),
@@ -204,10 +233,9 @@ class _PostCardState extends State<PostCard> {
                     ])),
               ),
               Container(
-                padding: const EdgeInsets.only(top: 5),
-                child: const Text(
-                  'View All 4 comments',
-                  style: TextStyle(fontSize: 16, color: secondaryColor),
+                child: Text(
+                  'View All $commentLen comments',
+                  style: const TextStyle(fontSize: 16, color: secondaryColor),
                 ),
               ),
               Container(
